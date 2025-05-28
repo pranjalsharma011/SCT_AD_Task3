@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>TickTock Stopwatch</title>
+<style>
+  /* Reset and base */
+  * {
+    box-sizing: border-box;
+  }
+  body, html {
+    margin:0; padding:0; height: 100%;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f0e9f7; /* pastel lavender */
+    overflow: hidden;
+    color: #5a4d6d;
+    user-select: none;
+    position: relative;
+  }
+
+  .emoji-container {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    user-select: none;
+    overflow: visible;
+    z-index: 5;
+  }
+
+  .emoji {
+    position: absolute;
+    font-size: 24px; /* Increased size */
+    opacity: 0.8;
+    will-change: transform;
+    user-select: none;
+  }
+
+  .container {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100vh;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .main-box {
+    background: #f9d5e5;
+    box-shadow: 0 10px 25px rgba(249, 213, 229, 0.7);
+    border-radius: 25px;
+    width: 600px;
+    max-width: 95vw;
+    height: 180px;
+    padding: 25px 40px 30px 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    user-select: none;
+    position: relative;
+    overflow: visible;
+    transition: box-shadow 0.4s ease;
+  }
+
+  /* Glow effect on main box */
+  .main-box.glow {
+    box-shadow:
+      0 0 15px 3px #f9b8c6,
+      0 0 35px 10px #f57f9a,
+      0 10px 25px rgba(245, 127, 154, 0.8);
+  }
+
+  .title {
+    font-weight: 900;
+    font-size: 3.2rem;
+    color: #8f5e85;
+    letter-spacing: 0.12em;
+    font-family: 'Charm', cursive;
+    margin-bottom: 20px;
+    user-select:none;
+  }
+
+  .stopwatch {
+    background: #fdf6f9;
+    border-radius: 16px;
+    width: 100%;
+    box-shadow:
+      inset 0 0 16px 4px #f4cee3,
+      0 15px 30px rgba(143, 94, 133, 0.30);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 22px 0;
+    font-weight: 700;
+    font-size: 2.8rem;
+    letter-spacing: 0.06em;
+    color: #7e6686;
+    user-select: none;
+  }
+
+  .time-part {
+    min-width: 70px;
+    text-align: center;
+    font-family: 'Courier New', Courier, monospace;
+    line-height: 1;
+  }
+
+  .dots {
+    font-weight: 900;
+    font-size: 2.8rem; /* Match the size of the time parts */
+    color: #b79abd;
+    user-select: none;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    transform: translateY(-10%); /* Shifted upwards */
+  }
+
+  .buttons {
+    margin-top: 25px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+  }
+
+  button {
+    background: #f3b8d9;
+    border: none;
+    border-radius: 18px;
+    padding: 8px 18px;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #7a467a;
+    box-shadow: 0 5px 8px rgba(209, 122, 182, 0.7);
+    cursor: pointer;
+    user-select:none;
+    transition: all 0.3s ease;
+    letter-spacing: 0.05em;
+    font-family: 'Comic Neue', cursive, 'Comic Sans MS', cursive, sans-serif;
+    min-width: 80px;
+    max-width: 100px;
+  }
+
+  button#resetBtn {
+    background: #e2a1d3;
+    box-shadow: 0 4px 6px rgba(179, 98, 145, 0.7);
+    color: #6b3c6a;
+  }
+
+  button:disabled {
+    background: #f0c5e3;
+    box-shadow: none;
+    color: #aa8dae;
+    cursor: default;
+  }
+
+  button:hover:not(:disabled) {
+    background: #e79fce;
+    box-shadow: 0 10px 14px rgba(231, 159, 206, 0.9);
+    color: #5e3360;
+  }
+
+  button:active:not(:disabled) {
+    transform: translateY(2px);
+    box-shadow: 0 4px 8px rgba(163, 96, 144, 0.8);
+  }
+
+  /* Fonts from Google */
+  @import url('https://fonts.googleapis.com/css2?family=Charm&family=Comic+Neue:wght@700&display=swap');
+</style>
+</head>
+<body>
+
+<div class="emoji-container" aria-hidden="true"></div>
+
+<div class="container" role="main" aria-label="Stopwatch application">
+  <div class="main-box" aria-live="polite" aria-atomic="true">
+    <div class="title">TickTock</div>
+    <div class="stopwatch" aria-relevant="text">
+      <div class="time-part" id="minutes">00</div>
+      <div class="dots">:</div>
+      <div class="time-part" id="seconds">00</div>
+      <div class="dots">:</div>
+      <div class="time-part" id="milliseconds">000</div>
+    </div>
+    <div class="buttons">
+      <button id="startBtn" aria-label="Start stopwatch">Start</button>
+      <button id="pauseBtn" aria-label="Pause stopwatch" disabled>Pause</button>
+      <button id="resetBtn" aria-label="Reset stopwatch" disabled>Reset</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Stopwatch logic
+  let startTime = 0;
+  let elapsedTime = 0;
+  let timerInterval;
+  let running = false;
+
+  const minutesElement = document.getElementById('minutes');
+  const secondsElement = document.getElementById('seconds');
+  const millisecondsElement = document.getElementById('milliseconds');
+  const startBtn = document.getElementById('startBtn');
+  const pauseBtn = document.getElementById('pauseBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const mainBox = document.querySelector('.main-box');
+  const emojiContainer = document.querySelector('.emoji-container');
+
+  // Glow effect toggle on main box when buttons are hovered
+  function addGlow() {
+    mainBox.classList.add('glow');
+  }
+  function removeGlow() {
+    mainBox.classList.remove('glow');
+  }
+
+  [startBtn, pauseBtn, resetBtn].forEach(button => {
+    button.addEventListener('mouseenter', addGlow);
+    button.addEventListener('mouseleave', removeGlow);
+  });
+
+  function timeToString(time) {
+    let diffInHrs = time / 3600000;
+    let hh = Math.floor(diffInHrs);
+
+    let diffInMin = (diffInHrs - hh) * 60;
+    let mm = Math.floor(diffInMin);
+
+    let diffInSec = (diffInMin - mm) * 60;
+    let ss = Math.floor(diffInSec);
+
+    let diffInMs = (diffInSec - ss) * 1000;
+    let ms = Math.floor(diffInMs);
+
+    let formattedMM = mm.toString().padStart(2, '0');
+    let formattedSS = ss.toString().padStart(2, '0');
+    let formattedMS = ms.toString().padStart(3, '0');
+
+    return {mm: formattedMM, ss: formattedSS, ms: formattedMS};
+  }
+
+  function print(txt) {
+    minutesElement.textContent = txt.mm;
+    secondsElement.textContent = txt.ss;
+    millisecondsElement.textContent = txt.ms;
+  }
+
+  function start() {
+    if (!running) {
+      startTime = Date.now() - elapsedTime;
+      timerInterval = setInterval(() => {
+        elapsedTime = Date.now() - startTime;
+        print(timeToString(elapsedTime));
+      }, 10);
+      running = true;
+      startBtn.disabled = true;
+      pauseBtn.disabled = false;
+      resetBtn.disabled = false;
+    }
+  }
+
+  function pause() {
+    if (running) {
+      clearInterval(timerInterval);
+      running = false;
+      startBtn.disabled = false;
+      pauseBtn.disabled = true;
+      resetBtn.disabled = false;
+    }
+  }
+
+  function reset() {
+    clearInterval(timerInterval);
+    running = false;
+    elapsedTime = 0;
+    print(timeToString(0));
+    startBtn.disabled = false;
+    pauseBtn.disabled = true;
+    resetBtn.disabled = true;
+  }
+
+  startBtn.addEventListener('click', start);
+  pauseBtn.addEventListener('click', pause);
+  resetBtn.addEventListener('click', reset);
+
+  // Initialize display
+  print(timeToString(0));
+
+  // Only flower emojis floating gently in the background
+  const emojis = [
+    "🌸", "🌼", "🌺", "🌻", "🌷"
+  ];
+
+  const emojiCount = 25; // Number of emojis to create
+  const floatingEmojis = [];
+
+  // Create an emoji element with initial position
+  function createEmoji() {
+    const emoji = document.createElement('div');
+    emoji.classList.add('emoji');
+    emoji.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    emoji.style.fontSize = `${24}px`; // Set fixed size for larger emojis
+    // Initial random position
+    emoji.style.left = `${Math.random() * window.innerWidth}px`;
+    emoji.style.top = `${Math.random() * window.innerHeight}px`; // Random vertical position
+
+    // Random movement speed and direction
+    emoji.dataset.speedX = (Math.random() * 2 - 1) * 0.5; // Horizontal speed
+    emoji.dataset.speedY = (Math.random() * 2 - 1) * 0.5; // Vertical speed
+
+    emojiContainer.appendChild(emoji);
+    return emoji;
+  }
+
+  // Animate emojis with gentle movement
+  function animateEmojis() {
+    const emojis = document.querySelectorAll('.emoji');
+    emojis.forEach(emoji => {
+      let x = parseFloat(emoji.style.left);
+      let y = parseFloat(emoji.style.top);
+      const speedX = parseFloat(emoji.dataset.speedX);
+      const speedY = parseFloat(emoji.dataset.speedY);
+
+      // Update position
+      x += speedX;
+      y += speedY;
+
+      // Boundary checking
+      if (x < 0 || x > window.innerWidth - 50) {
+        emoji.dataset.speedX *= -1; // Reverse direction
+      }
+      if (y < 0 || y > window.innerHeight - 50) {
+        emoji.dataset.speedY *= -1; // Reverse direction
+      }
+
+      emoji.style.left = `${x}px`;
+      emoji.style.top = `${y}px`;
+    });
+
+    requestAnimationFrame(animateEmojis);
+  }
+
+  function initEmojis() {
+    emojiContainer.innerHTML = '';
+    for(let i = 0; i < emojiCount; i++) {
+      floatingEmojis.push(createEmoji());
+    }
+  }
+
+  window.addEventListener('resize', () => {
+    const emojis = document.querySelectorAll('.emoji');
+    emojis.forEach(emoji => {
+      emoji.style.left = `${Math.random() * window.innerWidth}px`;
+      emoji.style.top = `${Math.random() * window.innerHeight}px`;
+    });
+  });
+
+  initEmojis();
+  animateEmojis();
+
+</script>
+</body>
+</html>
